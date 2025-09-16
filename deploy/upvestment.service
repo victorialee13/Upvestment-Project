@@ -1,0 +1,15 @@
+[Unit]
+Description=UPvestment FastAPI Service
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/upvestment
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/opt/upvestment/venv/bin/gunicorn -c deploy/gunicorn_conf.py app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
