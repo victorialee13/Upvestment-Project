@@ -9,21 +9,30 @@ UPvestment is a machine learning–driven web app that predicts short-term S&P 5
 - Binary trend label (next-day up/down)
 - Chronological train/test split, evaluation, and artifact saving
 - FastAPI service with `/predict` endpoint
-- Visualization of feature importance and predicted vs actual trend
+- React frontend with interactive prediction form
+- Real-time predictions with color-coded results
+- Feature importance visualization with Chart.js
+- CORS enabled for cross-origin requests
 - Deployment configs for Gunicorn + Nginx on AWS EC2
 
 ## Project Structure
 ```
 Upvestment Project/
-├─ app.py
-├─ features.py
-├─ train.py
-├─ visualize.py
-├─ requirements.txt
-├─ data/
-├─ models/
-├─ reports/
-└─ deploy/
+├─ app.py                    # FastAPI backend
+├─ features.py              # Feature engineering
+├─ train.py                 # Model training
+├─ visualize.py             # Data visualization
+├─ requirements.txt         # Python dependencies
+├─ frontend/                # React frontend
+│  ├─ src/
+│  │  ├─ components/        # React components
+│  │  ├─ services/          # API service
+│  │  └─ App.jsx           # Main app component
+│  └─ package.json         # Node dependencies
+├─ data/                    # Processed datasets
+├─ models/                  # Trained model artifacts
+├─ reports/                 # Metrics and visualizations
+└─ deploy/                  # Deployment configs
 ```
 
 ## Setup
@@ -46,10 +55,36 @@ python train.py
 ```
 Artifacts will be saved to `models/model.pkl`, `models/features.json`, `reports/metrics.json`, and processed data to `data/processed.parquet`.
 
-## Run API locally
+## Run the Application
+
+### Backend (FastAPI)
 ```bash
-uvicorn app:app --reload
+# Activate virtual environment
+.venv\Scripts\Activate.ps1  # Windows PowerShell
+# or
+source .venv/bin/activate    # Linux/Mac
+
+# Start the API server
+python -m uvicorn app:app --host 127.0.0.1 --port 8000 --reload
 ```
+- API will be available at http://127.0.0.1:8000
+- Interactive docs at http://127.0.0.1:8000/docs
+
+### Frontend (React)
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies (first time only)
+npm install
+
+# Start development server
+npm run dev
+```
+- Frontend will be available at http://127.0.0.1:5173
+- Hot reload enabled - changes update automatically
+
+### API Endpoints
 - GET `/` returns a welcome message and feature schema
 - POST `/predict` accepts JSON body:
 ```json
