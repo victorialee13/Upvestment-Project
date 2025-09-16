@@ -17,25 +17,89 @@ export default function InputForm({ onSubmit, loading }) {
     onSubmit?.(payload);
   };
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 480 }}>
-      <label>
-        SMA 10
-        <input name="sma_10" type="number" step="any" required value={form.sma_10} onChange={handleChange} />
-      </label>
-      <label>
-        SMA 50
-        <input name="sma_50" type="number" step="any" required value={form.sma_50} onChange={handleChange} />
-      </label>
-      <label>
-        Daily Return (e.g., 0.002)
-        <input name="daily_return" type="number" step="any" required value={form.daily_return} onChange={handleChange} />
-      </label>
-      <label>
-        RSI
-        <input name="rsi" type="number" step="any" required value={form.rsi} onChange={handleChange} />
-      </label>
-      <button type="submit" disabled={loading}>
-        {loading ? "Predicting..." : "Predict"}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-700">
+          SMA 10
+        </label>
+        <input 
+          name="sma_10" 
+          type="number" 
+          step="any" 
+          required 
+          value={form.sma_10} 
+          onChange={handleChange}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+          placeholder="Enter 10-day moving average"
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-700">
+          SMA 50
+        </label>
+        <input 
+          name="sma_50" 
+          type="number" 
+          step="any" 
+          required 
+          value={form.sma_50} 
+          onChange={handleChange}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+          placeholder="Enter 50-day moving average"
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-700">
+          Daily Return
+        </label>
+        <input 
+          name="daily_return" 
+          type="number" 
+          step="any" 
+          required 
+          value={form.daily_return} 
+          onChange={handleChange}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+          placeholder="e.g., 0.002 for 0.2%"
+        />
+        <p className="text-xs text-gray-500">Enter as decimal (0.002 = 0.2%)</p>
+      </div>
+      
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-700">
+          RSI (Relative Strength Index)
+        </label>
+        <input 
+          name="rsi" 
+          type="number" 
+          step="any" 
+          required 
+          value={form.rsi} 
+          onChange={handleChange}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+          placeholder="Enter RSI value (0-100)"
+        />
+      </div>
+      
+      <button 
+        type="submit" 
+        disabled={loading}
+        className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
+          loading 
+            ? 'bg-gray-400 cursor-not-allowed text-white' 
+            : 'bg-primary hover:bg-blue-700 text-white'
+        }`}
+      >
+        {loading ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+            Predicting...
+          </div>
+        ) : (
+          'Predict Market Trend'
+        )}
       </button>
     </form>
   );
