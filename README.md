@@ -1,5 +1,5 @@
 # UPvestment
-
+Started March 2025, Uploaded all local commits Sep 2025
 UPvestment is a machine learning–driven web app that predicts short-term S&P 500 market trends to assist investment decisions. It trains a RandomForest model on engineered technical features and serves predictions via FastAPI.
 
 ## Features
