@@ -7,7 +7,7 @@ from typing import Tuple
 import joblib
 import numpy as np
 import pandas as pd
-from kagglehub import KaggleDataset
+from kagglehub import dataset_download
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
@@ -34,9 +34,8 @@ def download_sp500_dataset() -> Path:
 
     Dataset: andrewmvd/sp-500-stocks
     """
-    dataset = KaggleDataset("andrewmvd/sp-500-stocks")
-    local_path = Path(dataset.download_path())
-    return local_path
+    local_dir = dataset_download("andrewmvd/sp-500-stocks")
+    return Path(local_dir)
 
 
 def load_prices_from_dataset(dataset_path: Path) -> pd.DataFrame:

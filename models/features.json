@@ -1,0 +1,8 @@
+{
+  "columns": [
+    "sma_10",
+    "sma_50",
+    "daily_return",
+    "rsi"
+  ]
+}
