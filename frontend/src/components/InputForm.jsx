@@ -19,7 +19,7 @@ export default function InputForm({ onSubmit, loading }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-gray-700">
+        <label className="block text-sm font-semibold text-gray-700 font-body">
           SMA 10
         </label>
         <input 
@@ -29,13 +29,13 @@ export default function InputForm({ onSubmit, loading }) {
           required 
           value={form.sma_10} 
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors font-body"
           placeholder="Enter 10-day moving average"
         />
       </div>
       
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-gray-700">
+        <label className="block text-sm font-semibold text-gray-700 font-body">
           SMA 50
         </label>
         <input 
@@ -45,13 +45,13 @@ export default function InputForm({ onSubmit, loading }) {
           required 
           value={form.sma_50} 
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors font-body"
           placeholder="Enter 50-day moving average"
         />
       </div>
       
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-gray-700">
+        <label className="block text-sm font-semibold text-gray-700 font-body">
           Daily Return
         </label>
         <input 
@@ -61,14 +61,14 @@ export default function InputForm({ onSubmit, loading }) {
           required 
           value={form.daily_return} 
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors font-body"
           placeholder="e.g., 0.002 for 0.2%"
         />
-        <p className="text-xs text-gray-500">Enter as decimal (0.002 = 0.2%)</p>
+        <p className="text-xs text-gray-500 font-body">Enter as decimal (0.002 = 0.2%)</p>
       </div>
       
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-gray-700">
+        <label className="block text-sm font-semibold text-gray-700 font-body">
           RSI (Relative Strength Index)
         </label>
         <input 
@@ -78,7 +78,7 @@ export default function InputForm({ onSubmit, loading }) {
           required 
           value={form.rsi} 
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors font-body"
           placeholder="Enter RSI value (0-100)"
         />
       </div>
@@ -86,7 +86,7 @@ export default function InputForm({ onSubmit, loading }) {
       <button 
         type="submit" 
         disabled={loading}
-        className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
+        className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors font-body ${
           loading 
             ? 'bg-gray-400 cursor-not-allowed text-white' 
             : 'bg-primary hover:bg-blue-700 text-white'

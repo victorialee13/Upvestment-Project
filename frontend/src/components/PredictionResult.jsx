@@ -5,8 +5,8 @@ export default function PredictionResult({ result }) {
         <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
           <span className="text-2xl">📊</span>
         </div>
-        <h4 className="text-lg font-semibold text-gray-600 mb-2">Ready to Predict</h4>
-        <p className="text-gray-500 text-sm">Enter market indicators to get your prediction</p>
+        <h4 className="text-lg font-semibold text-gray-600 mb-2 font-body">Ready to Predict</h4>
+        <p className="text-gray-500 text-sm font-body">Enter market indicators to get your prediction</p>
       </div>
     );
   }
@@ -18,7 +18,7 @@ export default function PredictionResult({ result }) {
   return (
     <div className="text-center">
       {/* Prediction Badge */}
-      <div className={`inline-flex items-center px-6 py-3 rounded-full text-lg font-bold mb-6 ${
+      <div className={`inline-flex items-center px-6 py-3 rounded-full text-lg font-bold mb-6 font-display ${
         isUp 
           ? 'bg-green-100 text-green-800 border-2 border-green-200' 
           : 'bg-red-100 text-red-800 border-2 border-red-200'
@@ -29,8 +29,8 @@ export default function PredictionResult({ result }) {
 
       {/* Confidence Score */}
       <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <h5 className="text-sm font-semibold text-gray-600 mb-2">Confidence Score</h5>
-        <div className="text-3xl font-bold text-gray-800 mb-2">
+        <h5 className="text-sm font-semibold text-gray-600 mb-2 font-body">Confidence Score</h5>
+        <div className="text-3xl font-bold text-gray-800 mb-2 font-display">
           {confidence}%
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -44,7 +44,7 @@ export default function PredictionResult({ result }) {
       </div>
 
       {/* Additional Info */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-gray-600 font-body">
         <p className="mb-2">
           <span className="font-semibold">Prediction:</span> {isUp ? "Bullish" : "Bearish"} market sentiment
         </p>
