@@ -18,17 +18,13 @@ function App() {
   const [backtestError, setBacktestError] = useState(null);
 
   useEffect(() => {
-    fetchFeatureImportance()
-      .then(setFeatureImportance)
-      .catch(() => {});
-
+    fetchFeatureImportance().then(setFeatureImportance).catch(() => {});
     fetchBacktest(30)
       .then(setBacktestData)
       .catch((err) => setBacktestError(err.message))
       .finally(() => setBacktestLoading(false));
   }, []);
 
-  // One-click: fetch live data then immediately predict
   const handlePredictLive = async () => {
     setLoading(true);
     setLiveLoading(true);
@@ -56,11 +52,10 @@ function App() {
     }
   };
 
-  // Manual form submission (Advanced Mode)
   const handlePredict = async (payload) => {
     setLoading(true);
     setError(null);
-    setLiveData(null); // manual input — don't show live indicator panel
+    setLiveData(null);
     try {
       const data = await predictTrend(payload);
       setResult(data);
@@ -71,7 +66,6 @@ function App() {
     }
   };
 
-  // Used by InputForm's "Use Live Data" button
   const handleLoadLive = async () => {
     setLiveLoading(true);
     setError(null);
@@ -87,94 +81,85 @@ function App() {
     }
   };
 
-  const scrollToPredictor = () => {
-    document.getElementById("predictor-section")?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 font-body">
-      {/* Hero */}
-      <section
-        className="text-white py-20"
-        style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)" }}
-      >
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-4 font-display">UPvestment</h1>
-          <h2 className="text-2xl font-semibold mb-4 font-display">AI-Powered S&P 500 Predictor</h2>
-          <p className="text-xl mb-8 opacity-90 font-body leading-relaxed">
-            Leverage machine learning to analyze live market signals and predict short-term S&P 500 trends.
+    <div style={{ backgroundColor: "#f7f7f7", minHeight: "100vh", color: "#111111" }}>
+      <div style={{ maxWidth: "720px", margin: "0 auto", padding: "0 24px" }}>
+
+        {/* Header */}
+        <header style={{ textAlign: "center", padding: "64px 0 48px" }}>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>
+            Upvestment
+          </h1>
+          <p style={{ fontSize: "1rem", color: "#555555", marginTop: "10px", marginBottom: 0 }}>
+            S&amp;P 500 prediction powered by machine learning
           </p>
-          <button
-            onClick={scrollToPredictor}
-            className="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors font-body"
-          >
-            Try Prediction
-          </button>
-        </div>
-      </section>
+        </header>
 
-      {/* Prediction Section */}
-      <section id="predictor-section" className="py-16">
-        <div className="max-w-2xl mx-auto px-4">
+        <hr style={{ border: "none", borderTop: "1px solid #dddddd", margin: "0 0 48px" }} />
 
-          {/* Main prediction card */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center font-display">
-              Today's S&P 500 Prediction
-            </h3>
-            <p className="text-sm text-gray-400 text-center mb-6 font-body">
-              Uses live SPY data from Yahoo Finance
-            </p>
+        {/* Prediction Tool */}
+        <section style={{ marginBottom: "64px" }}>
+          <p style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#555555", marginBottom: "20px" }}>
+            Prediction
+          </p>
 
-            {/* Primary action */}
+          <div style={{ border: "1px solid #dddddd", borderRadius: "8px", backgroundColor: "#ffffff", padding: "32px" }}>
             <button
               onClick={handlePredictLive}
               disabled={loading}
-              className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all font-display mb-6 ${
-                loading
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-accent hover:bg-green-700 text-white shadow-md hover:shadow-lg"
-              }`}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "14px 32px",
+                backgroundColor: loading ? "#999999" : "#111111",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "0.95rem",
+                fontWeight: 600,
+                cursor: loading ? "not-allowed" : "pointer",
+                marginBottom: "8px",
+              }}
             >
               {loading ? (
-                <span className="flex items-center justify-center">
-                  <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3" />
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  <span style={{
+                    display: "inline-block", width: "14px", height: "14px",
+                    border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff",
+                    borderRadius: "50%", animation: "spin 0.7s linear infinite"
+                  }} />
                   {liveLoading ? "Fetching live data..." : "Analyzing..."}
                 </span>
-              ) : result ? (
-                "Refresh Prediction"
-              ) : (
-                "Predict Today"
-              )}
+              ) : result ? "Refresh Prediction" : "Predict Today"}
             </button>
 
-            {/* Error */}
+            <p style={{ fontSize: "0.75rem", color: "#888888", textAlign: "center", margin: "0 0 24px" }}>
+              Fetches live SPY data · takes 2–4 seconds
+            </p>
+
             {error && (
-              <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-body">
-                {error}
+              <div style={{ padding: "12px 16px", border: "1px solid #dddddd", borderRadius: "6px", fontSize: "0.85rem", color: "#555555", marginBottom: "20px" }}>
+                Error: {error}
               </div>
             )}
 
-            {/* Result */}
             <PredictionResult result={result} indicators={liveData} />
           </div>
 
-          {/* Advanced Mode toggle */}
-          <div className="mt-4 text-center">
+          <div style={{ marginTop: "12px", textAlign: "center" }}>
             <button
               onClick={() => setAdvancedMode((v) => !v)}
-              className="text-sm text-gray-400 hover:text-gray-600 font-body underline underline-offset-2 transition-colors"
+              style={{ background: "none", border: "none", fontSize: "0.8rem", color: "#888888", cursor: "pointer", textDecoration: "underline" }}
             >
-              {advancedMode ? "Hide Advanced Mode" : "Advanced Mode — enter indicators manually"}
+              {advancedMode ? "Hide manual entry" : "Enter indicators manually"}
             </button>
           </div>
 
-          {/* Advanced Mode form */}
           {advancedMode && (
-            <div className="bg-white rounded-xl shadow-lg p-8 mt-4">
-              <h3 className="text-xl font-bold text-gray-800 mb-5 text-center font-display">
+            <div style={{ border: "1px solid #dddddd", borderRadius: "8px", backgroundColor: "#ffffff", padding: "32px", marginTop: "12px" }}>
+              <p style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#555555", marginBottom: "20px" }}>
                 Manual Indicators
-              </h3>
+              </p>
               <InputForm
                 onSubmit={handlePredict}
                 loading={loading}
@@ -184,77 +169,73 @@ function App() {
               />
             </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      {/* Performance History */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center text-gray-800 mb-3 font-display">
+        <hr style={{ border: "none", borderTop: "1px solid #dddddd", margin: "0 0 48px" }} />
+
+        {/* Performance */}
+        <section style={{ marginBottom: "64px" }}>
+          <p style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#555555", marginBottom: "6px" }}>
             Model Performance
-          </h3>
-          <p className="text-center text-gray-400 text-sm font-body mb-10">
-            How the model performed on the last 30 trading days of SPY data
           </p>
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <HistoryChart
-              data={backtestData}
-              loading={backtestLoading}
-              error={backtestError}
-            />
+          <p style={{ fontSize: "0.85rem", color: "#888888", marginBottom: "20px" }}>
+            Backtested on the last 30 trading days of SPY data
+          </p>
+          <div style={{ border: "1px solid #dddddd", borderRadius: "8px", backgroundColor: "#ffffff", padding: "24px" }}>
+            <HistoryChart data={backtestData} loading={backtestLoading} error={backtestError} />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Feature Analysis */}
-      <section className="py-16 bg-white">
-        <div className="max-w-3xl mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center text-gray-800 mb-10 font-display">
+        <hr style={{ border: "none", borderTop: "1px solid #dddddd", margin: "0 0 48px" }} />
+
+        {/* Feature Analysis */}
+        <section style={{ marginBottom: "64px" }}>
+          <p style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#555555", marginBottom: "6px" }}>
             Feature Analysis
-          </h3>
-          <div className="bg-white rounded-xl shadow-lg p-8">
+          </p>
+          <p style={{ fontSize: "0.85rem", color: "#888888", marginBottom: "20px" }}>
+            Which indicators influence the model most
+          </p>
+          <div style={{ border: "1px solid #dddddd", borderRadius: "8px", backgroundColor: "#ffffff", padding: "24px" }}>
             <Charts featureImportance={featureImportance} />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How It Works */}
-      <section className="py-16 bg-gray-100">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h3 className="text-3xl font-bold text-gray-800 mb-10 font-display">How It Works</h3>
-          <div className="grid md:grid-cols-4 gap-8">
+        <hr style={{ border: "none", borderTop: "1px solid #dddddd", margin: "0 0 48px" }} />
+
+        {/* How It Works */}
+        <section style={{ marginBottom: "64px" }}>
+          <p style={{ fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#555555", marginBottom: "20px" }}>
+            How It Works
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
             {[
-              { step: 1, title: "Data Collection", desc: "Live SPY data from Yahoo Finance" },
-              { step: 2, title: "Feature Engineering", desc: "SMA, RSI, and daily returns" },
-              { step: 3, title: "ML Model", desc: "RandomForest classifier" },
-              { step: 4, title: "Prediction", desc: "Next-day trend with confidence" },
+              { step: "01", title: "Data", desc: "Live SPY from Yahoo Finance" },
+              { step: "02", title: "Indicators", desc: "SMA, RSI, MACD, Bollinger" },
+              { step: "03", title: "Model", desc: "RandomForest classifier" },
+              { step: "04", title: "Prediction", desc: "Trend + confidence score" },
             ].map(({ step, title, desc }) => (
-              <div key={step} className="text-center">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: "#1e3a8a" }}
-                >
-                  <span className="text-white font-bold text-xl">{step}</span>
-                </div>
-                <h4 className="font-semibold text-gray-800 mb-2 font-body">{title}</h4>
-                <p className="text-gray-600 text-sm font-body">{desc}</p>
+              <div key={step} style={{ border: "1px solid #dddddd", borderRadius: "8px", padding: "16px", backgroundColor: "#ffffff" }}>
+                <p style={{ fontSize: "0.7rem", color: "#aaaaaa", margin: "0 0 6px", fontWeight: 500 }}>{step}</p>
+                <p style={{ fontSize: "0.85rem", fontWeight: 600, margin: "0 0 4px" }}>{title}</p>
+                <p style={{ fontSize: "0.75rem", color: "#888888", margin: 0 }}>{desc}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-10">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <p className="text-gray-400 mb-2 font-body">
-            <strong>Disclaimer:</strong> For educational purposes only. Not financial advice.
+        {/* Footer */}
+        <footer style={{ borderTop: "1px solid #dddddd", padding: "32px 0", textAlign: "center" }}>
+          <p style={{ fontSize: "0.75rem", color: "#888888", margin: 0 }}>
+            For educational purposes only · Not financial advice · © 2025 Upvestment
           </p>
-          <p className="text-gray-500 text-sm font-body">
-            © 2025 UPvestment. Built with React, FastAPI, and Machine Learning.
-          </p>
-        </div>
-      </footer>
+        </footer>
+
+      </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

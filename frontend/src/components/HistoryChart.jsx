@@ -1,8 +1,7 @@
 export default function HistoryChart({ data, loading, error }) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-400 font-body text-sm">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-3" />
+      <div style={{ textAlign: "center", padding: "32px 0", fontSize: "0.85rem", color: "#888888" }}>
         Loading backtest data...
       </div>
     );
@@ -10,7 +9,9 @@ export default function HistoryChart({ data, loading, error }) {
 
   if (error) {
     return (
-      <div className="py-8 text-center text-red-500 text-sm font-body">{error}</div>
+      <div style={{ textAlign: "center", padding: "24px 0", fontSize: "0.85rem", color: "#555555" }}>
+        {error}
+      </div>
     );
   }
 
@@ -18,68 +19,59 @@ export default function HistoryChart({ data, loading, error }) {
 
   const { results, accuracy, correct, total } = data;
   const accuracyPct = (accuracy * 100).toFixed(1);
-  const isGood = accuracy >= 0.55;
 
   return (
     <div>
       {/* Summary stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
-          <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-1">30-Day Accuracy</p>
-          <p className={`text-3xl font-bold font-display ${isGood ? "text-green-600" : "text-red-500"}`}>
-            {accuracyPct}%
-          </p>
-        </div>
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
-          <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-1">Correct</p>
-          <p className="text-3xl font-bold text-gray-800 font-display">{correct}</p>
-        </div>
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
-          <p className="text-xs text-gray-400 uppercase tracking-wide font-body mb-1">Total Days</p>
-          <p className="text-3xl font-bold text-gray-800 font-display">{total}</p>
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
+        {[
+          { label: "30-Day Accuracy", value: `${accuracyPct}%` },
+          { label: "Correct", value: correct },
+          { label: "Total Days", value: total },
+        ].map(({ label, value }) => (
+          <div key={label} style={{ border: "1px solid #dddddd", borderRadius: "6px", padding: "16px", textAlign: "center" }}>
+            <p style={{ fontSize: "0.7rem", color: "#888888", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+              {label}
+            </p>
+            <p style={{ fontSize: "1.6rem", fontWeight: 700, margin: 0 }}>{value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Per-day results table */}
-      <div className="overflow-hidden rounded-lg border border-gray-100">
-        <div className="max-h-72 overflow-y-auto">
-          <table className="w-full text-sm font-body">
-            <thead className="bg-gray-50 sticky top-0">
-              <tr>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</th>
-                <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Price</th>
-                <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Predicted</th>
-                <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actual</th>
-                <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Result</th>
+      {/* Table */}
+      <div style={{ border: "1px solid #dddddd", borderRadius: "6px", overflow: "hidden" }}>
+        <div style={{ maxHeight: "280px", overflowY: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid #dddddd", backgroundColor: "#f7f7f7" }}>
+                {["Date", "Price", "Predicted", "Actual", "Result"].map((h, i) => (
+                  <th key={h} style={{
+                    padding: "10px 12px",
+                    textAlign: i === 0 ? "left" : "center",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    color: "#555555",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}>
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {[...results].reverse().map((row) => (
-                <tr key={row.date} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-3 py-2 text-gray-600">{row.date}</td>
-                  <td className="px-3 py-2 text-right text-gray-700 font-medium">${row.price}</td>
-                  <td className="px-3 py-2 text-center">
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      row.prediction === "Up"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}>
-                      {row.prediction === "Up" ? "▲" : "▼"} {row.prediction}
-                    </span>
+            <tbody>
+              {[...results].reverse().map((row, i) => (
+                <tr key={row.date} style={{ borderBottom: "1px solid #eeeeee", backgroundColor: i % 2 === 0 ? "#ffffff" : "#fafafa" }}>
+                  <td style={{ padding: "9px 12px", color: "#555555" }}>{row.date}</td>
+                  <td style={{ padding: "9px 12px", textAlign: "center", fontWeight: 500 }}>${row.price}</td>
+                  <td style={{ padding: "9px 12px", textAlign: "center" }}>
+                    {row.prediction === "Up" ? "↑ Up" : "↓ Down"}
                   </td>
-                  <td className="px-3 py-2 text-center">
-                    <span className={`text-xs font-medium ${
-                      row.actual === "Up" ? "text-green-600" : "text-red-500"
-                    }`}>
-                      {row.actual === "Up" ? "▲" : "▼"} {row.actual}
-                    </span>
+                  <td style={{ padding: "9px 12px", textAlign: "center", color: "#555555" }}>
+                    {row.actual === "Up" ? "↑ Up" : "↓ Down"}
                   </td>
-                  <td className="px-3 py-2 text-center">
-                    {row.correct ? (
-                      <span className="text-green-500 font-bold">✓</span>
-                    ) : (
-                      <span className="text-red-400 font-bold">✗</span>
-                    )}
+                  <td style={{ padding: "9px 12px", textAlign: "center", fontWeight: 600 }}>
+                    {row.correct ? "✓" : "✗"}
                   </td>
                 </tr>
               ))}
@@ -87,8 +79,9 @@ export default function HistoryChart({ data, loading, error }) {
           </table>
         </div>
       </div>
-      <p className="text-xs text-gray-400 font-body mt-3 text-center">
-        Predictions generated by running the model on historical SPY data. Not forward-looking.
+
+      <p style={{ fontSize: "0.72rem", color: "#aaaaaa", marginTop: "10px", textAlign: "center" }}>
+        Model run on historical SPY data. Not forward-looking.
       </p>
     </div>
   );
