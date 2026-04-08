@@ -25,3 +25,8 @@ reports/figures/
 # IDE
 .vscode/
 .idea/
+
+# Frontend build output
+frontend/dist/
+
+# Docker build output

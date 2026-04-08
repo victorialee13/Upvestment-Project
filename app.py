@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -11,6 +12,8 @@ import pandas as pd
 import yfinance as yf
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from features import compute_rsi, compute_macd, compute_bollinger_width
@@ -100,10 +103,13 @@ def load_model_and_schema():
 
 app = FastAPI(title="UPvestment", version="1.0.0")
 
-# Add CORS middleware
+# CORS — configurable via env var for production (comma-separated origins)
+_default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+cors_origins = os.getenv("CORS_ORIGINS", _default_origins).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -295,6 +301,13 @@ def backtest(days: int = 30) -> BacktestResponse:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Backtest failed: {e}")
+
+
+# Serve built React frontend (production mode)
+# Run `cd frontend && npm run build` first to generate frontend/dist
+_dist = PROJECT_ROOT / "frontend" / "dist"
+if _dist.exists():
+    app.mount("/", StaticFiles(directory=str(_dist), html=True), name="frontend")
 
 
 # Dev server: uvicorn app:app --reload

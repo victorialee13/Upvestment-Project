@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - CORS_ORIGINS=http://localhost:8000
+    volumes:
+      # Mount model artifacts so you can retrain without rebuilding the image
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./reports:/app/reports
+    restart: unless-stopped
