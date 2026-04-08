@@ -65,6 +65,22 @@ class FeatureImportanceResponse(BaseModel):
     importances: List[float]
 
 
+class BacktestEntry(BaseModel):
+    date: str
+    price: float
+    prediction: str
+    prob_up: float
+    actual: str
+    correct: bool
+
+
+class BacktestResponse(BaseModel):
+    results: List[BacktestEntry]
+    accuracy: float
+    correct: int
+    total: int
+
+
 def load_model_and_schema():
     model_path = MODELS_DIR / "model.pkl"
     features_path = MODELS_DIR / "features.json"
@@ -206,6 +222,79 @@ def feature_importance() -> FeatureImportanceResponse:
     """Return feature importances from the trained RandomForest model."""
     importances = model.feature_importances_.tolist()
     return FeatureImportanceResponse(features=feature_cols, importances=importances)
+
+
+@app.get("/backtest", response_model=BacktestResponse)
+def backtest(days: int = 30) -> BacktestResponse:
+    """Run the model over the last N trading days and return predictions vs actuals."""
+    try:
+        ticker = yf.Ticker("SPY")
+        df = ticker.history(period="6mo")
+        if df.empty or len(df) < days + 60:
+            raise HTTPException(status_code=503, detail="Not enough historical data.")
+
+        close = df["Close"]
+        ret = close.pct_change()
+
+        # Compute all indicators over full history
+        sma_10_s = close.rolling(10).mean()
+        sma_50_s = close.rolling(50).mean()
+        rsi_s = compute_rsi(close)
+        macd_line, signal_line = compute_macd(close)
+        bb_width_s = compute_bollinger_width(close)
+        vol20_s = ret.rolling(20).std()
+        mom5_s = close.pct_change(5)
+        sma_10_ratio_s = close / sma_10_s - 1
+        sma_50_ratio_s = close / sma_50_s - 1
+        macd_pct_s = macd_line / close
+        macd_signal_pct_s = signal_line / close
+
+        feature_series = {
+            "sma_10_ratio": sma_10_ratio_s,
+            "sma_50_ratio": sma_50_ratio_s,
+            "daily_return": ret,
+            "rsi": rsi_s,
+            "macd_pct": macd_pct_s,
+            "macd_signal_pct": macd_signal_pct_s,
+            "bb_width": bb_width_s,
+            "volatility_20": vol20_s,
+            "momentum_5": mom5_s,
+        }
+
+        results = []
+        # Predict on days[-days-1:-1], actual outcome = next day's direction
+        n = len(df)
+        correct = 0
+        for i in range(n - days - 1, n - 1):
+            features = [float(feature_series[col].iloc[i]) for col in feature_cols]
+            if any(np.isnan(f) for f in features):
+                continue
+
+            prob_up = float(model.predict_proba(np.array([features]))[0][1])
+            prediction = "Up" if prob_up >= 0.5 else "Down"
+            actual_up = float(close.iloc[i + 1]) > float(close.iloc[i])
+            actual = "Up" if actual_up else "Down"
+            is_correct = prediction == actual
+            if is_correct:
+                correct += 1
+
+            results.append(BacktestEntry(
+                date=str(df.index[i].date()),
+                price=round(float(close.iloc[i]), 2),
+                prediction=prediction,
+                prob_up=round(prob_up, 3),
+                actual=actual,
+                correct=is_correct,
+            ))
+
+        total = len(results)
+        accuracy = round(correct / total, 4) if total else 0.0
+        return BacktestResponse(results=results, accuracy=accuracy, correct=correct, total=total)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backtest failed: {e}")
 
 
 # Dev server: uvicorn app:app --reload

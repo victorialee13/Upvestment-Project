@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import InputForm from "./components/InputForm";
 import PredictionResult from "./components/PredictionResult";
 import Charts from "./components/Charts";
-import { predictTrend, fetchLiveIndicators, fetchFeatureImportance } from "./services/api";
+import HistoryChart from "./components/HistoryChart";
+import { predictTrend, fetchLiveIndicators, fetchFeatureImportance, fetchBacktest } from "./services/api";
 
 function App() {
   const [result, setResult] = useState(null);
@@ -12,11 +13,19 @@ function App() {
   const [liveData, setLiveData] = useState(null);
   const [featureImportance, setFeatureImportance] = useState(null);
   const [advancedMode, setAdvancedMode] = useState(false);
+  const [backtestData, setBacktestData] = useState(null);
+  const [backtestLoading, setBacktestLoading] = useState(true);
+  const [backtestError, setBacktestError] = useState(null);
 
   useEffect(() => {
     fetchFeatureImportance()
       .then(setFeatureImportance)
       .catch(() => {});
+
+    fetchBacktest(30)
+      .then(setBacktestData)
+      .catch((err) => setBacktestError(err.message))
+      .finally(() => setBacktestLoading(false));
   }, []);
 
   // One-click: fetch live data then immediately predict
@@ -175,6 +184,25 @@ function App() {
               />
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Performance History */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4">
+          <h3 className="text-3xl font-bold text-center text-gray-800 mb-3 font-display">
+            Model Performance
+          </h3>
+          <p className="text-center text-gray-400 text-sm font-body mb-10">
+            How the model performed on the last 30 trading days of SPY data
+          </p>
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <HistoryChart
+              data={backtestData}
+              loading={backtestLoading}
+              error={backtestError}
+            />
+          </div>
         </div>
       </section>
 

@@ -27,3 +27,8 @@ export async function fetchFeatureImportance() {
   const resp = await fetch(`${API_BASE_URL}/feature-importance`);
   return handleResponse(resp);
 }
+
+export async function fetchBacktest(days = 30) {
+  const resp = await fetch(`${API_BASE_URL}/backtest?days=${days}`);
+  return handleResponse(resp);
+}
