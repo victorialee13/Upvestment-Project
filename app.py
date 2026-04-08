@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import joblib
 import numpy as np
@@ -13,6 +14,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from features import compute_rsi, compute_macd, compute_bollinger_width
+
+# Simple in-memory cache for live indicators (avoids hammering Yahoo Finance)
+_live_cache: dict = {}
+_CACHE_TTL = timedelta(minutes=15)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -100,6 +105,21 @@ def root() -> Dict[str, str]:
     }
 
 
+@app.get("/health")
+def health() -> Dict:
+    cached_as_of = _live_cache.get("as_of")
+    cache_age_s = None
+    if "ts" in _live_cache:
+        cache_age_s = round((datetime.now() - _live_cache["ts"]).total_seconds())
+    return {
+        "status": "ok",
+        "model": type(model).__name__,
+        "features": len(feature_cols),
+        "cache_age_seconds": cache_age_s,
+        "last_data_date": cached_as_of,
+    }
+
+
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest) -> PredictResponse:
     try:
@@ -120,6 +140,10 @@ def predict(req: PredictRequest) -> PredictResponse:
 @app.get("/live-indicators", response_model=LiveIndicatorsResponse)
 def live_indicators() -> LiveIndicatorsResponse:
     """Fetch latest SPY data from Yahoo Finance and compute technical indicators."""
+    # Return cached result if still fresh
+    if "data" in _live_cache and (datetime.now() - _live_cache["ts"]) < _CACHE_TTL:
+        return _live_cache["data"]
+
     try:
         ticker = yf.Ticker("SPY")
         # Fetch 120 days to cover SMA-50, MACD, Bollinger, and volatility warmup
@@ -151,7 +175,7 @@ def live_indicators() -> LiveIndicatorsResponse:
         macd_pct = macd / price
         macd_signal_pct = macd_sig / price
 
-        return LiveIndicatorsResponse(
+        result = LiveIndicatorsResponse(
             sma_10=round(sma_10, 4),
             sma_50=round(sma_50, 4),
             daily_return=round(daily_return, 6),
@@ -167,6 +191,10 @@ def live_indicators() -> LiveIndicatorsResponse:
             macd_pct=round(macd_pct, 8),
             macd_signal_pct=round(macd_signal_pct, 8),
         )
+        _live_cache["data"] = result
+        _live_cache["ts"] = datetime.now()
+        _live_cache["as_of"] = as_of
+        return result
     except HTTPException:
         raise
     except Exception as e:
