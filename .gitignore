@@ -1,0 +1,27 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Data & model artifacts (large files)
+data/*.parquet
+models/*.pkl
+
+# Reports / figures
+reports/figures/
+
+# Environment
+.env
+*.env
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

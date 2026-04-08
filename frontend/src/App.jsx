@@ -11,16 +11,42 @@ function App() {
   const [liveLoading, setLiveLoading] = useState(false);
   const [liveData, setLiveData] = useState(null);
   const [featureImportance, setFeatureImportance] = useState(null);
+  const [advancedMode, setAdvancedMode] = useState(false);
 
   useEffect(() => {
     fetchFeatureImportance()
       .then(setFeatureImportance)
-      .catch(() => {}); // silently fall back to defaults
+      .catch(() => {});
   }, []);
 
+  // One-click: fetch live data then immediately predict
+  const handlePredictLive = async () => {
+    setLoading(true);
+    setLiveLoading(true);
+    setError(null);
+    try {
+      const live = await fetchLiveIndicators();
+      setLiveData(live);
+      const prediction = await predictTrend({
+        sma_10: live.sma_10,
+        sma_50: live.sma_50,
+        daily_return: live.daily_return,
+        rsi: live.rsi,
+      });
+      setResult(prediction);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setLiveLoading(false);
+    }
+  };
+
+  // Manual form submission (Advanced Mode)
   const handlePredict = async (payload) => {
     setLoading(true);
     setError(null);
+    setLiveData(null); // manual input — don't show live indicator panel
     try {
       const data = await predictTrend(payload);
       setResult(data);
@@ -31,6 +57,7 @@ function App() {
     }
   };
 
+  // Used by InputForm's "Use Live Data" button
   const handleLoadLive = async () => {
     setLiveLoading(true);
     setError(null);
@@ -47,24 +74,23 @@ function App() {
   };
 
   const scrollToPredictor = () => {
-    document.getElementById('predictor-section')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById("predictor-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 font-body">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary to-blue-800 text-white py-20" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
-          <h1 className="text-5xl font-bold mb-6 font-display">
-            UPvestment
-          </h1>
-          <h2 className="text-2xl font-semibold mb-4 font-display">
-            AI-Powered S&P 500 Predictor
-          </h2>
-          <p className="text-xl mb-8 max-w-3xl mx-auto opacity-90 font-body leading-relaxed">
-            Leverage machine learning to analyze market signals and predict short-term trends with advanced technical indicators.
+      {/* Hero */}
+      <section
+        className="text-white py-20"
+        style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)" }}
+      >
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h1 className="text-5xl font-bold mb-4 font-display">UPvestment</h1>
+          <h2 className="text-2xl font-semibold mb-4 font-display">AI-Powered S&P 500 Predictor</h2>
+          <p className="text-xl mb-8 opacity-90 font-body leading-relaxed">
+            Leverage machine learning to analyze live market signals and predict short-term S&P 500 trends.
           </p>
-          <button 
+          <button
             onClick={scrollToPredictor}
             className="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors font-body"
           >
@@ -75,93 +101,120 @@ function App() {
 
       {/* Prediction Section */}
       <section id="predictor-section" className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
-          <div className="max-w-6xl mx-auto" style={{ maxWidth: '1152px', margin: '0 auto' }}>
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Input Form Card */}
-              <div className="bg-white rounded-xl shadow-lg p-8">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center font-display">Market Indicators</h3>
-                <InputForm
-                  onSubmit={handlePredict}
-                  loading={loading}
-                  onLoadLive={handleLoadLive}
-                  liveLoading={liveLoading}
-                  liveData={liveData}
-                />
-                {error && (
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                    Error: {error}
-                  </div>
-                )}
-              </div>
+        <div className="max-w-2xl mx-auto px-4">
 
-              {/* Prediction Result Card */}
-              <div className="bg-white rounded-xl shadow-lg p-8">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center font-display">Prediction Result</h3>
-                <PredictionResult result={result} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Visualization Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
-          <div className="max-w-6xl mx-auto" style={{ maxWidth: '1152px', margin: '0 auto' }}>
-            <h3 className="text-3xl font-bold text-center text-gray-800 mb-12 font-display">
-              Feature Analysis
+          {/* Main prediction card */}
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center font-display">
+              Today's S&P 500 Prediction
             </h3>
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <Charts featureImportance={featureImportance} />
+            <p className="text-sm text-gray-400 text-center mb-6 font-body">
+              Uses live SPY data from Yahoo Finance
+            </p>
+
+            {/* Primary action */}
+            <button
+              onClick={handlePredictLive}
+              disabled={loading}
+              className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all font-display mb-6 ${
+                loading
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-accent hover:bg-green-700 text-white shadow-md hover:shadow-lg"
+              }`}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3" />
+                  {liveLoading ? "Fetching live data..." : "Analyzing..."}
+                </span>
+              ) : result ? (
+                "Refresh Prediction"
+              ) : (
+                "Predict Today"
+              )}
+            </button>
+
+            {/* Error */}
+            {error && (
+              <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-body">
+                {error}
+              </div>
+            )}
+
+            {/* Result */}
+            <PredictionResult result={result} indicators={liveData} />
+          </div>
+
+          {/* Advanced Mode toggle */}
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setAdvancedMode((v) => !v)}
+              className="text-sm text-gray-400 hover:text-gray-600 font-body underline underline-offset-2 transition-colors"
+            >
+              {advancedMode ? "Hide Advanced Mode" : "Advanced Mode — enter indicators manually"}
+            </button>
+          </div>
+
+          {/* Advanced Mode form */}
+          {advancedMode && (
+            <div className="bg-white rounded-xl shadow-lg p-8 mt-4">
+              <h3 className="text-xl font-bold text-gray-800 mb-5 text-center font-display">
+                Manual Indicators
+              </h3>
+              <InputForm
+                onSubmit={handlePredict}
+                loading={loading}
+                onLoadLive={handleLoadLive}
+                liveLoading={liveLoading}
+                liveData={liveData}
+              />
             </div>
+          )}
+        </div>
+      </section>
+
+      {/* Feature Analysis */}
+      <section className="py-16 bg-white">
+        <div className="max-w-3xl mx-auto px-4">
+          <h3 className="text-3xl font-bold text-center text-gray-800 mb-10 font-display">
+            Feature Analysis
+          </h3>
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <Charts featureImportance={featureImportance} />
           </div>
         </div>
       </section>
 
-      {/* About Section */}
+      {/* How It Works */}
       <section className="py-16 bg-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
-          <div className="max-w-4xl mx-auto text-center" style={{ maxWidth: '896px', margin: '0 auto', textAlign: 'center' }}>
-            <h3 className="text-3xl font-bold text-gray-800 mb-8 font-display">How It Works</h3>
-            <div className="grid md:grid-cols-4 gap-8">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-xl">1</span>
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h3 className="text-3xl font-bold text-gray-800 mb-10 font-display">How It Works</h3>
+          <div className="grid md:grid-cols-4 gap-8">
+            {[
+              { step: 1, title: "Data Collection", desc: "Live SPY data from Yahoo Finance" },
+              { step: 2, title: "Feature Engineering", desc: "SMA, RSI, and daily returns" },
+              { step: 3, title: "ML Model", desc: "RandomForest classifier" },
+              { step: 4, title: "Prediction", desc: "Next-day trend with confidence" },
+            ].map(({ step, title, desc }) => (
+              <div key={step} className="text-center">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: "#1e3a8a" }}
+                >
+                  <span className="text-white font-bold text-xl">{step}</span>
                 </div>
-                <h4 className="font-semibold text-gray-800 mb-2 font-body">Data Collection</h4>
-                <p className="text-gray-600 text-sm font-body">S&P 500 historical data from Kaggle</p>
+                <h4 className="font-semibold text-gray-800 mb-2 font-body">{title}</h4>
+                <p className="text-gray-600 text-sm font-body">{desc}</p>
               </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-xl">2</span>
-                </div>
-                <h4 className="font-semibold text-gray-800 mb-2 font-body">Feature Engineering</h4>
-                <p className="text-gray-600 text-sm font-body">SMA, RSI, and daily returns</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-xl">3</span>
-                </div>
-                <h4 className="font-semibold text-gray-800 mb-2 font-body">ML Training</h4>
-                <p className="text-gray-600 text-sm font-body">RandomForest classifier</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-xl">4</span>
-                </div>
-                <h4 className="font-semibold text-gray-800 mb-2 font-body">Prediction</h4>
-                <p className="text-gray-600 text-sm font-body">Real-time trend analysis</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
-          <p className="text-gray-400 mb-4 font-body">
+      <footer className="bg-gray-900 text-white py-10">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <p className="text-gray-400 mb-2 font-body">
             <strong>Disclaimer:</strong> For educational purposes only. Not financial advice.
           </p>
           <p className="text-gray-500 text-sm font-body">
@@ -173,4 +226,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
