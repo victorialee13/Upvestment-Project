@@ -28,10 +28,15 @@ function App() {
       const live = await fetchLiveIndicators();
       setLiveData(live);
       const prediction = await predictTrend({
-        sma_10: live.sma_10,
-        sma_50: live.sma_50,
+        sma_10_ratio: live.sma_10_ratio,
+        sma_50_ratio: live.sma_50_ratio,
         daily_return: live.daily_return,
         rsi: live.rsi,
+        macd_pct: live.macd_pct,
+        macd_signal_pct: live.macd_signal_pct,
+        bb_width: live.bb_width,
+        volatility_20: live.volatility_20,
+        momentum_5: live.momentum_5,
       });
       setResult(prediction);
     } catch (err) {

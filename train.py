@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Tuple
 
 import joblib
 import numpy as np
 import pandas as pd
-from kagglehub import dataset_download
+import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
@@ -26,56 +25,21 @@ MODELS_DIR = PROJECT_ROOT / "models"
 REPORTS_DIR = PROJECT_ROOT / "reports"
 
 SEED = 42
-FEATURE_COLUMNS = ("sma_10", "sma_50", "daily_return", "rsi")
+FEATURE_COLUMNS = (
+    "sma_10_ratio", "sma_50_ratio", "daily_return", "rsi",
+    "macd_pct", "macd_signal_pct", "bb_width", "volatility_20", "momentum_5",
+)
 
 
-def download_sp500_dataset() -> Path:
-    """Download the Kaggle dataset and return the local path.
-
-    Dataset: andrewmvd/sp-500-stocks
-    """
-    local_dir = dataset_download("andrewmvd/sp-500-stocks")
-    return Path(local_dir)
-
-
-def load_prices_from_dataset(dataset_path: Path) -> pd.DataFrame:
-    """Load constituent prices. Fallback to SPY if present else equal-weighted index.
-
-    The dataset contains per-ticker CSVs under a directory. We will try to find
-    SPY.csv; if not found, we will aggregate closing prices from all tickers to
-    form an equal-weighted series to use as the training target.
-    """
-    # Try to locate a CSV named 'SPY.csv'
-    spy_csv = None
-    for p in dataset_path.rglob("*.csv"):
-        if p.name.lower() == "spy.csv":
-            spy_csv = p
-            break
-
-    if spy_csv is not None:
-        df = pd.read_csv(spy_csv)
-        return df.rename(columns={"Date": "date", "Close": "close"})
-
-    # Aggregate equal-weighted index from all CSVs
-    frames = []
-    for p in dataset_path.rglob("*.csv"):
-        try:
-            f = pd.read_csv(p, usecols=["Date", "Close"]).rename(
-                columns={"Date": "date", "Close": "close"}
-            )
-            frames.append(f)
-        except Exception:
-            continue
-
-    if not frames:
-        raise RuntimeError("No price CSVs found in dataset to build index")
-
-    all_df = pd.concat(frames, axis=0, ignore_index=True)
-    all_df["date"] = pd.to_datetime(all_df["date"], errors="coerce")
-    all_df = all_df.dropna(subset=["date", "close"]).sort_values("date")
-    # Compute equal-weighted average close per date
-    eq = all_df.groupby("date")["close"].mean().reset_index()
-    return eq
+def load_spy_prices(period: str = "10y") -> pd.DataFrame:
+    """Download SPY historical prices from Yahoo Finance."""
+    ticker = yf.Ticker("SPY")
+    df = ticker.history(period=period)
+    if df.empty:
+        raise RuntimeError("No data returned from Yahoo Finance for SPY.")
+    df = df.reset_index()[["Date", "Close"]].rename(columns={"Date": "date", "Close": "close"})
+    df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None)
+    return df
 
 
 def main() -> None:
@@ -84,12 +48,9 @@ def main() -> None:
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    print("Downloading dataset from Kaggle...")
-    dataset_path = download_sp500_dataset()
-    print(f"Dataset at: {dataset_path}")
-
-    print("Loading prices...")
-    raw_prices = load_prices_from_dataset(dataset_path)
+    print("Downloading SPY prices from Yahoo Finance...")
+    raw_prices = load_spy_prices(period="10y")
+    print(f"Loaded {len(raw_prices)} rows of SPY data")
 
     print("Engineering indicators...")
     cfg = IndicatorConfig()
@@ -109,10 +70,10 @@ def main() -> None:
 
     print("Training RandomForestClassifier...")
     model = RandomForestClassifier(
-        n_estimators=300,
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
+        n_estimators=500,
+        max_depth=8,
+        min_samples_leaf=5,
+        max_features="sqrt",
         random_state=SEED,
         n_jobs=-1,
     )

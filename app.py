@@ -12,7 +12,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from features import compute_rsi
+from features import compute_rsi, compute_macd, compute_bollinger_width
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -20,10 +20,15 @@ MODELS_DIR = PROJECT_ROOT / "models"
 
 
 class PredictRequest(BaseModel):
-    sma_10: float = Field(..., description="10-day simple moving average")
-    sma_50: float = Field(..., description="50-day simple moving average")
+    sma_10_ratio: float = Field(..., description="Price deviation from SMA-10 (close/sma_10 - 1)")
+    sma_50_ratio: float = Field(..., description="Price deviation from SMA-50 (close/sma_50 - 1)")
     daily_return: float = Field(..., description="Daily return as decimal")
     rsi: float = Field(..., ge=0, le=100, description="Relative Strength Index (0–100)")
+    macd_pct: float = Field(..., description="MACD line as fraction of price")
+    macd_signal_pct: float = Field(..., description="MACD signal line as fraction of price")
+    bb_width: float = Field(..., description="Bollinger Band width normalised by mid band")
+    volatility_20: float = Field(..., description="20-day rolling std of daily returns")
+    momentum_5: float = Field(..., description="5-day price momentum")
 
 
 class PredictResponse(BaseModel):
@@ -32,12 +37,22 @@ class PredictResponse(BaseModel):
 
 
 class LiveIndicatorsResponse(BaseModel):
+    # Raw display values
     sma_10: float
     sma_50: float
     daily_return: float
     rsi: float
+    macd: float
+    bb_width: float
+    volatility_20: float
+    momentum_5: float
     price: float
     as_of: str
+    # Normalised model inputs
+    sma_10_ratio: float
+    sma_50_ratio: float
+    macd_pct: float
+    macd_signal_pct: float
 
 
 class FeatureImportanceResponse(BaseModel):
@@ -107,26 +122,50 @@ def live_indicators() -> LiveIndicatorsResponse:
     """Fetch latest SPY data from Yahoo Finance and compute technical indicators."""
     try:
         ticker = yf.Ticker("SPY")
-        # Fetch 80 days to have enough history for SMA-50 + RSI-14 warmup
-        df = ticker.history(period="80d")
+        # Fetch 120 days to cover SMA-50, MACD, Bollinger, and volatility warmup
+        df = ticker.history(period="120d")
         if df.empty:
             raise HTTPException(status_code=503, detail="No data returned from Yahoo Finance.")
 
         close = df["Close"]
-        sma_10 = float(close.rolling(10, min_periods=10).mean().iloc[-1])
-        sma_50 = float(close.rolling(50, min_periods=50).mean().iloc[-1])
-        daily_return = float(close.pct_change().iloc[-1])
+        ret = close.pct_change()
+
+        sma_10_s = close.rolling(10, min_periods=10).mean()
+        sma_50_s = close.rolling(50, min_periods=50).mean()
+        sma_10 = float(sma_10_s.iloc[-1])
+        sma_50 = float(sma_50_s.iloc[-1])
+        daily_return = float(ret.iloc[-1])
         rsi = float(compute_rsi(close, window=14).iloc[-1])
+        macd_line, signal_line = compute_macd(close)
+        macd = float(macd_line.iloc[-1])
+        macd_sig = float(signal_line.iloc[-1])
+        bb_width = float(compute_bollinger_width(close, window=20).iloc[-1])
+        volatility_20 = float(ret.rolling(20, min_periods=20).std().iloc[-1])
+        momentum_5 = float(close.pct_change(5).iloc[-1])
         price = float(close.iloc[-1])
         as_of = str(df.index[-1].date())
+
+        # Normalised features (matching training)
+        sma_10_ratio = price / sma_10 - 1
+        sma_50_ratio = price / sma_50 - 1
+        macd_pct = macd / price
+        macd_signal_pct = macd_sig / price
 
         return LiveIndicatorsResponse(
             sma_10=round(sma_10, 4),
             sma_50=round(sma_50, 4),
             daily_return=round(daily_return, 6),
             rsi=round(rsi, 2),
+            macd=round(macd, 4),
+            bb_width=round(bb_width, 6),
+            volatility_20=round(volatility_20, 6),
+            momentum_5=round(momentum_5, 6),
             price=round(price, 2),
             as_of=as_of,
+            sma_10_ratio=round(sma_10_ratio, 6),
+            sma_50_ratio=round(sma_50_ratio, 6),
+            macd_pct=round(macd_pct, 8),
+            macd_signal_pct=round(macd_signal_pct, 8),
         )
     except HTTPException:
         raise
