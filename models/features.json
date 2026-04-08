@@ -1,8 +1,13 @@
 {
   "columns": [
-    "sma_10",
-    "sma_50",
+    "sma_10_ratio",
+    "sma_50_ratio",
     "daily_return",
-    "rsi"
+    "rsi",
+    "macd_pct",
+    "macd_signal_pct",
+    "bb_width",
+    "volatility_20",
+    "momentum_5"
   ]
 }

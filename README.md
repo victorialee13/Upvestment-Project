@@ -1,146 +1,208 @@
 # UPvestment
-Started March 2025, Uploaded all local commits Sep 2025
 
-UPvestment is a machine learning–driven web app that predicts short-term S&P 500 market trends to assist investment decisions. It trains a RandomForest model on engineered technical features and serves predictions via FastAPI.
+An AI-powered web application that predicts short-term S&P 500 (SPY) market trends using machine learning and live market data.
+
+> **Disclaimer:** For educational purposes only. Not financial advice.
+
+---
 
 ## Features
-- Data download from Kaggle via `kagglehub` (dataset: `andrewmvd/sp-500-stocks`)
-- Feature engineering: daily return, SMA(10), SMA(50), RSI(14)
-- Binary trend label (next-day up/down)
-- Chronological train/test split, evaluation, and artifact saving
-- FastAPI service with `/predict` endpoint
-- React frontend with interactive prediction form
-- Real-time predictions with color-coded results
-- Feature importance visualization with Chart.js
-- CORS enabled for cross-origin requests
-- Deployment configs for Gunicorn + Nginx on AWS EC2
+
+- **One-click prediction** — fetches live SPY data from Yahoo Finance and runs the model instantly
+- **9 technical indicators** — SMA ratios, RSI, MACD, Bollinger Band width, volatility, momentum
+- **55%+ model accuracy** — RandomForest trained on 10 years of SPY data with normalised features
+- **30-day backtest** — see how the model performed on the last 30 real trading days
+- **Signal breakdown** — RSI level, SMA cross, daily return, and momentum interpretation
+- **Real feature importance** — live chart showing which signals drive the model's decisions
+- **15-minute data cache** — avoids hammering Yahoo Finance on repeated requests
+- **Advanced Mode** — manual indicator entry for power users
+- **Production-ready** — Docker support, env-based CORS, frontend served from FastAPI
+
+---
 
 ## Project Structure
+
 ```
-Upvestment Project/
-├─ app.py                    # FastAPI backend
-├─ features.py              # Feature engineering
-├─ train.py                 # Model training
-├─ visualize.py             # Data visualization
-├─ requirements.txt         # Python dependencies
-├─ frontend/                # React frontend
-│  ├─ src/
-│  │  ├─ components/        # React components
-│  │  ├─ services/          # API service
-│  │  └─ App.jsx           # Main app component
-│  └─ package.json         # Node dependencies
-├─ data/                    # Processed datasets
-├─ models/                  # Trained model artifacts
-├─ reports/                 # Metrics and visualizations
-└─ deploy/                  # Deployment configs
+Upvestment-Project/
+├── app.py               # FastAPI backend — all API endpoints
+├── features.py          # Feature engineering (indicators + normalisation)
+├── train.py             # Model training script
+├── visualize.py         # Static plot generation
+├── requirements.txt     # Python dependencies
+├── Dockerfile           # Multi-stage Docker build
+├── docker-compose.yml   # Single-command deployment
+│
+├── frontend/            # React + Vite + Tailwind frontend
+│   └── src/
+│       ├── App.jsx
+│       ├── components/
+│       │   ├── InputForm.jsx        # Manual indicator form (Advanced Mode)
+│       │   ├── PredictionResult.jsx # Result badge + signal breakdown
+│       │   ├── Charts.jsx           # Feature importance bar chart
+│       │   └── HistoryChart.jsx     # 30-day backtest performance table
+│       └── services/api.js          # API client
+│
+├── models/              # Trained model artifacts
+│   └── features.json    # Feature column schema
+├── data/                # Processed datasets (gitignored)
+└── reports/             # Metrics and visualisations
+    └── metrics.json
 ```
 
+---
+
 ## Setup
+
+### Requirements
 - Python 3.10+
-- Install dependencies:
+- Node.js 18+
+
+### Install Python dependencies
+
 ```bash
 python -m venv .venv
-. .venv/Scripts/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+source .venv/bin/activate        # macOS/Linux
+# .venv\Scripts\Activate.ps1    # Windows PowerShell
 pip install -r requirements.txt
 ```
 
-### Kaggle credentials
-Set up Kaggle API credentials so `kagglehub` can download datasets.
-- Create an API token in your Kaggle account (Account > API > Create New Token).
-- Place `kaggle.json` in one of the supported locations (e.g., `%USERPROFILE%/.kaggle/kaggle.json`).
+### Train the model
 
-## Train
+Downloads 10 years of SPY data from Yahoo Finance and trains the model:
+
 ```bash
 python train.py
 ```
-Artifacts will be saved to `models/model.pkl`, `models/features.json`, `reports/metrics.json`, and processed data to `data/processed.parquet`.
 
-## Run the Application
+Artifacts saved to `models/` and `reports/`.
 
-### Backend (FastAPI)
+---
+
+## Running Locally
+
+### Backend
+
 ```bash
-# Activate virtual environment
-.venv\Scripts\Activate.ps1  # Windows PowerShell
-# or
-source .venv/bin/activate    # Linux/Mac
-
-# Start the API server
-python -m uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+source .venv/bin/activate
+uvicorn app:app --host 127.0.0.1 --port 8000 --reload
 ```
-- API will be available at http://127.0.0.1:8000
-- Interactive docs at http://127.0.0.1:8000/docs
 
-### Frontend (React)
+API available at **http://127.0.0.1:8000**
+Interactive docs at **http://127.0.0.1:8000/docs**
+
+### Frontend
+
 ```bash
-# Navigate to frontend directory
 cd frontend
-
-# Install dependencies (first time only)
-npm install
-
-# Start development server
+npm install       # first time only
 npm run dev
 ```
-- Frontend will be available at http://127.0.0.1:5173
-- Hot reload enabled - changes update automatically
 
-### API Endpoints
-- GET `/` returns a welcome message and feature schema
-- POST `/predict` accepts JSON body:
-```json
-{
-  "sma_10": 4520.5,
-  "sma_50": 4495.1,
-  "daily_return": 0.0031,
-  "rsi": 57.4
-}
+Frontend available at **http://localhost:5173**
+
+---
+
+## Running with Docker
+
+Build and run the full stack in a single container:
+
+```bash
+docker compose up --build
 ```
-Response:
+
+App available at **http://localhost:8000**
+
+The React frontend is built and served directly by FastAPI — no separate server needed.
+
+> **Note:** Train the model before building the Docker image (`python train.py`) so `models/` is populated.
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Welcome message and feature schema |
+| `GET` | `/health` | Model status, cache age, last data date |
+| `GET` | `/live-indicators` | Fetch live SPY indicators from Yahoo Finance |
+| `POST` | `/predict` | Run model prediction on provided features |
+| `GET` | `/feature-importance` | Feature importances from the trained model |
+| `GET` | `/backtest?days=30` | Model predictions vs actuals for last N trading days |
+
+### POST `/predict` example
+
 ```json
+// Request
+{
+  "sma_10_ratio": 0.003,
+  "sma_50_ratio": 0.012,
+  "daily_return": 0.0031,
+  "rsi": 57.4,
+  "macd_pct": -0.0001,
+  "macd_signal_pct": -0.00008,
+  "bb_width": 0.045,
+  "volatility_20": 0.009,
+  "momentum_5": 0.018
+}
+
+// Response
 {
   "prediction": "Up",
   "prob_up": 0.63
 }
 ```
 
-## Visualizations
+---
+
+## Model Details
+
+| Property | Value |
+|----------|-------|
+| Algorithm | RandomForestClassifier |
+| Training data | 10 years of SPY (via yfinance) |
+| Features | 9 normalised technical indicators |
+| Test accuracy | ~55% |
+| Train/test split | 80/20 chronological |
+
+### Features used
+
+| Feature | Description |
+|---------|-------------|
+| `sma_10_ratio` | Price deviation from 10-day SMA (`close/sma_10 - 1`) |
+| `sma_50_ratio` | Price deviation from 50-day SMA (`close/sma_50 - 1`) |
+| `daily_return` | Today's percentage price change |
+| `rsi` | 14-day Relative Strength Index (0–100) |
+| `macd_pct` | MACD line as fraction of price |
+| `macd_signal_pct` | MACD signal line as fraction of price |
+| `bb_width` | Bollinger Band width normalised by mid band |
+| `volatility_20` | 20-day rolling standard deviation of daily returns |
+| `momentum_5` | 5-day price momentum (percentage change) |
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated allowed origins |
+
+Set in production:
 ```bash
-python visualize.py
+export CORS_ORIGINS=https://yourdomain.com
 ```
-Saves plots under `reports/figures/`.
+
+---
 
 ## Deployment (AWS EC2)
-1. SSH to your Ubuntu EC2 instance and install system packages:
-```bash
-sudo apt update && sudo apt install -y python3-venv python3-pip nginx
-```
-2. Place project under `/opt/upvestment`, then:
-```bash
-cd /opt/upvestment
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python train.py  # to produce model artifacts
-```
-3. Gunicorn service:
-- Copy `deploy/upvestment.service` to `/etc/systemd/system/upvestment.service` and adjust `User` and paths if needed.
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable upvestment
-sudo systemctl start upvestment
-sudo systemctl status upvestment
-```
-4. Nginx:
-- Copy `deploy/nginx.conf` to `/etc/nginx/sites-available/upvestment` and symlink to `sites-enabled`.
-```bash
-sudo ln -s /etc/nginx/sites-available/upvestment /etc/nginx/sites-enabled/upvestment
-sudo nginx -t && sudo systemctl restart nginx
-```
-You should now have the API on port 80 via Nginx.
 
-## Notes
-- If the dataset does not include the S&P index or SPY directly, the training script constructs an equal-weighted proxy from the constituents.
-- For reproducibility, a fixed random seed is used.
-- Ensure that no future leakage occurs by keeping chronological splits.
+1. SSH to your Ubuntu instance and install dependencies:
+```bash
+sudo apt update && sudo apt install -y docker.io docker-compose-v2
+```
 
+2. Clone the repo, train the model, then:
+```bash
+docker compose up --build -d
+```
 
+3. Set up Nginx to reverse proxy port 80 → 8000 if needed (config in `deploy/nginx.conf`).
