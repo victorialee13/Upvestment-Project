@@ -12,8 +12,8 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function Charts({ featureImportance }) {
-  const labels = featureImportance?.labels || ["sma_10", "sma_50", "daily_return", "rsi"];
-  const values = featureImportance?.values || [0.25, 0.35, 0.2, 0.2];
+  const labels = featureImportance?.features || ["sma_10", "sma_50", "daily_return", "rsi"];
+  const values = featureImportance?.importances || [0.25, 0.35, 0.2, 0.2];
 
   const data = {
     labels,

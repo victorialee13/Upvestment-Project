@@ -1,13 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import InputForm from "./components/InputForm";
 import PredictionResult from "./components/PredictionResult";
 import Charts from "./components/Charts";
-import { predictTrend } from "./services/api";
+import { predictTrend, fetchLiveIndicators, fetchFeatureImportance } from "./services/api";
 
 function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [liveData, setLiveData] = useState(null);
+  const [featureImportance, setFeatureImportance] = useState(null);
+
+  useEffect(() => {
+    fetchFeatureImportance()
+      .then(setFeatureImportance)
+      .catch(() => {}); // silently fall back to defaults
+  }, []);
 
   const handlePredict = async (payload) => {
     setLoading(true);
@@ -19,6 +28,21 @@ function App() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLoadLive = async () => {
+    setLiveLoading(true);
+    setError(null);
+    try {
+      const data = await fetchLiveIndicators();
+      setLiveData(data);
+      return data;
+    } catch (err) {
+      setError(`Could not fetch live data: ${err.message}`);
+      return null;
+    } finally {
+      setLiveLoading(false);
     }
   };
 
@@ -57,7 +81,13 @@ function App() {
               {/* Input Form Card */}
               <div className="bg-white rounded-xl shadow-lg p-8">
                 <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center font-display">Market Indicators</h3>
-                <InputForm onSubmit={handlePredict} loading={loading} />
+                <InputForm
+                  onSubmit={handlePredict}
+                  loading={loading}
+                  onLoadLive={handleLoadLive}
+                  liveLoading={liveLoading}
+                  liveData={liveData}
+                />
                 {error && (
                   <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
                     Error: {error}
@@ -83,7 +113,7 @@ function App() {
               Feature Analysis
             </h3>
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <Charts featureImportance={null} />
+              <Charts featureImportance={featureImportance} />
             </div>
           </div>
         </div>
