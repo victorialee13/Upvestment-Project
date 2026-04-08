@@ -1,4 +1,4 @@
-# UPvestment
+# Upvestment
 
 An AI-powered web application that predicts short-term S&P 500 (SPY) market trends using machine learning and live market data.
 
@@ -9,13 +9,13 @@ An AI-powered web application that predicts short-term S&P 500 (SPY) market tren
 ## Features
 
 - **One-click prediction** — fetches live SPY data from Yahoo Finance and runs the model instantly
-- **9 technical indicators** — SMA ratios, RSI, MACD, Bollinger Band width, volatility, momentum
-- **55%+ model accuracy** — RandomForest trained on 10 years of SPY data with normalised features
+- **9 normalised technical indicators** — SMA ratios, RSI, MACD %, Bollinger Band width, volatility, momentum
+- **55%+ model accuracy** — RandomForest trained on 10 years of SPY data
 - **30-day backtest** — see how the model performed on the last 30 real trading days
 - **Signal breakdown** — RSI level, SMA cross, daily return, and momentum interpretation
-- **Real feature importance** — live chart showing which signals drive the model's decisions
+- **Feature importance chart** — see which signals drive the model's decisions
 - **15-minute data cache** — avoids hammering Yahoo Finance on repeated requests
-- **Advanced Mode** — manual indicator entry for power users
+- **Advanced Mode** — manually enter all 9 indicators to test hypothetical conditions
 - **Production-ready** — Docker support, env-based CORS, frontend served from FastAPI
 
 ---
@@ -27,25 +27,24 @@ Upvestment-Project/
 ├── app.py               # FastAPI backend — all API endpoints
 ├── features.py          # Feature engineering (indicators + normalisation)
 ├── train.py             # Model training script
-├── visualize.py         # Static plot generation
 ├── requirements.txt     # Python dependencies
 ├── Dockerfile           # Multi-stage Docker build
 ├── docker-compose.yml   # Single-command deployment
 │
-├── frontend/            # React + Vite + Tailwind frontend
+├── frontend/            # React + Vite frontend
 │   └── src/
 │       ├── App.jsx
 │       ├── components/
 │       │   ├── InputForm.jsx        # Manual indicator form (Advanced Mode)
-│       │   ├── PredictionResult.jsx # Result badge + signal breakdown
+│       │   ├── PredictionResult.jsx # Result + signal breakdown
 │       │   ├── Charts.jsx           # Feature importance bar chart
-│       │   └── HistoryChart.jsx     # 30-day backtest performance table
+│       │   └── HistoryChart.jsx     # 30-day backtest table
 │       └── services/api.js          # API client
 │
 ├── models/              # Trained model artifacts
 │   └── features.json    # Feature column schema
 ├── data/                # Processed datasets (gitignored)
-└── reports/             # Metrics and visualisations
+└── reports/             # Metrics
     └── metrics.json
 ```
 
@@ -80,17 +79,17 @@ Artifacts saved to `models/` and `reports/`.
 
 ## Running Locally
 
-### Backend
+### Backend (Terminal 1)
 
 ```bash
 source .venv/bin/activate
-uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-API available at **http://127.0.0.1:8000**
-Interactive docs at **http://127.0.0.1:8000/docs**
+API available at **http://localhost:8000**  
+Interactive docs at **http://localhost:8000/docs**
 
-### Frontend
+### Frontend (Terminal 2)
 
 ```bash
 cd frontend
@@ -99,6 +98,8 @@ npm run dev
 ```
 
 Frontend available at **http://localhost:5173**
+
+> The backend must be running before you use the app — it handles live data fetching and predictions.
 
 ---
 
@@ -164,12 +165,12 @@ The React frontend is built and served directly by FastAPI — no separate serve
 | Test accuracy | ~55% |
 | Train/test split | 80/20 chronological |
 
-### Features used
+### Features
 
 | Feature | Description |
 |---------|-------------|
-| `sma_10_ratio` | Price deviation from 10-day SMA (`close/sma_10 - 1`) |
-| `sma_50_ratio` | Price deviation from 50-day SMA (`close/sma_50 - 1`) |
+| `sma_10_ratio` | Price deviation from 10-day SMA: `close/sma_10 − 1` |
+| `sma_50_ratio` | Price deviation from 50-day SMA: `close/sma_50 − 1` |
 | `daily_return` | Today's percentage price change |
 | `rsi` | 14-day Relative Strength Index (0–100) |
 | `macd_pct` | MACD line as fraction of price |
@@ -184,7 +185,7 @@ The React frontend is built and served directly by FastAPI — no separate serve
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated allowed origins |
+| `CORS_ORIGINS` | `http://localhost:5173,...` | Comma-separated allowed origins |
 
 Set in production:
 ```bash
@@ -205,4 +206,4 @@ sudo apt update && sudo apt install -y docker.io docker-compose-v2
 docker compose up --build -d
 ```
 
-3. Set up Nginx to reverse proxy port 80 → 8000 if needed (config in `deploy/nginx.conf`).
+3. Set up Nginx to reverse proxy port 80 → 8000 if needed.

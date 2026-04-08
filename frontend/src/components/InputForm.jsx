@@ -1,11 +1,18 @@
 import { useState } from "react";
 
 const FIELDS = [
-  { name: "sma_10", label: "SMA 10", placeholder: "10-day moving average", hint: "Average closing price over the last 10 trading days" },
-  { name: "sma_50", label: "SMA 50", placeholder: "50-day moving average", hint: "Average closing price over the last 50 trading days" },
-  { name: "daily_return", label: "Daily Return", placeholder: "e.g. 0.002 for +0.2%", hint: "Today's price change as a decimal" },
-  { name: "rsi", label: "RSI", placeholder: "0 – 100", hint: "Below 30 = oversold, above 70 = overbought" },
+  { name: "sma_10_ratio", label: "SMA 10 Ratio", placeholder: "e.g. 0.003", hint: "Price deviation from 10-day SMA: (close / sma_10) − 1" },
+  { name: "sma_50_ratio", label: "SMA 50 Ratio", placeholder: "e.g. 0.012", hint: "Price deviation from 50-day SMA: (close / sma_50) − 1" },
+  { name: "daily_return", label: "Daily Return", placeholder: "e.g. 0.0031", hint: "Today's price change as a decimal: (today − yesterday) / yesterday" },
+  { name: "rsi", label: "RSI", placeholder: "0 – 100", hint: "14-day Relative Strength Index. Below 30 = oversold, above 70 = overbought" },
+  { name: "macd_pct", label: "MACD %", placeholder: "e.g. -0.0001", hint: "MACD line as a fraction of price: macd / close" },
+  { name: "macd_signal_pct", label: "MACD Signal %", placeholder: "e.g. -0.00008", hint: "MACD signal line as a fraction of price: macd_signal / close" },
+  { name: "bb_width", label: "Bollinger Band Width", placeholder: "e.g. 0.045", hint: "Bollinger Band width normalised by mid band: (upper − lower) / mid" },
+  { name: "volatility_20", label: "20d Volatility", placeholder: "e.g. 0.009", hint: "20-day rolling standard deviation of daily returns" },
+  { name: "momentum_5", label: "5d Momentum", placeholder: "e.g. 0.018", hint: "5-day price momentum: (close − close_5d_ago) / close_5d_ago" },
 ];
+
+const EMPTY_FORM = Object.fromEntries(FIELDS.map((f) => [f.name, ""]));
 
 const inputStyle = {
   display: "block",
@@ -21,16 +28,21 @@ const inputStyle = {
 };
 
 export default function InputForm({ onSubmit, loading, onLoadLive, liveLoading, liveData }) {
-  const [form, setForm] = useState({ sma_10: "", sma_50: "", daily_return: "", rsi: "" });
+  const [form, setForm] = useState(EMPTY_FORM);
 
   const handleLoadLive = async () => {
     const data = await onLoadLive?.();
     if (data) {
       setForm({
-        sma_10: String(data.sma_10),
-        sma_50: String(data.sma_50),
-        daily_return: String(data.daily_return),
-        rsi: String(data.rsi),
+        sma_10_ratio: String(data.sma_10_ratio ?? ""),
+        sma_50_ratio: String(data.sma_50_ratio ?? ""),
+        daily_return: String(data.daily_return ?? ""),
+        rsi: String(data.rsi ?? ""),
+        macd_pct: String(data.macd_pct ?? ""),
+        macd_signal_pct: String(data.macd_signal_pct ?? ""),
+        bb_width: String(data.bb_width ?? ""),
+        volatility_20: String(data.volatility_20 ?? ""),
+        momentum_5: String(data.momentum_5 ?? ""),
       });
     }
   };
@@ -42,12 +54,7 @@ export default function InputForm({ onSubmit, loading, onLoadLive, liveLoading, 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit?.({
-      sma_10: parseFloat(form.sma_10),
-      sma_50: parseFloat(form.sma_50),
-      daily_return: parseFloat(form.daily_return),
-      rsi: parseFloat(form.rsi),
-    });
+    onSubmit?.(Object.fromEntries(FIELDS.map((f) => [f.name, parseFloat(form[f.name])])));
   };
 
   return (

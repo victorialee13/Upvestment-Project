@@ -29,4 +29,5 @@ reports/figures/
 # Frontend build output
 frontend/dist/
 
-# Docker build output
+# Node
+node_modules/
