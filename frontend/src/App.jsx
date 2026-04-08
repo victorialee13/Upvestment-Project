@@ -91,7 +91,7 @@ function App() {
             Upvestment
           </h1>
           <p style={{ fontSize: "1rem", color: "#555555", marginTop: "10px", marginBottom: 0 }}>
-            S&amp;P 500 prediction powered by machine learning
+            S&amp;P 500 Prediction powered by machine learning
           </p>
         </header>
 
@@ -134,7 +134,7 @@ function App() {
             </button>
 
             <p style={{ fontSize: "0.75rem", color: "#888888", textAlign: "center", margin: "0 0 24px" }}>
-              Fetches live SPY data · takes 2–4 seconds
+              Fetches live SPY data - takes 2–4 seconds
             </p>
 
             {error && (

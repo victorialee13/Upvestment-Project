@@ -104,7 +104,7 @@ def load_model_and_schema():
 app = FastAPI(title="UPvestment", version="1.0.0")
 
 # CORS — configurable via env var for production (comma-separated origins)
-_default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+_default_origins = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177,http://localhost:5178,http://localhost:5179"
 cors_origins = os.getenv("CORS_ORIGINS", _default_origins).split(",")
 
 app.add_middleware(
